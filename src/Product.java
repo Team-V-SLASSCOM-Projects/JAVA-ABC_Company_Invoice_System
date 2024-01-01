@@ -41,7 +41,6 @@ public class Product {
     }
 
 
-
     public void setProductName(String productName) {
         this.productName = productName;
     }
@@ -66,7 +65,7 @@ public class Product {
         this.productId = productId;
     }
 
-    public boolean addProduct(Product product, Connection conn ) {
+    public boolean addProduct(Product product, Connection conn) {
         String insertSQL = "INSERT INTO product (product_name, description, purchase_price, selling_price, quantity) VALUES (?, ?, ?, ?, ?)";
 
         try (PreparedStatement statement = conn.prepareStatement(insertSQL)) {
@@ -149,26 +148,26 @@ public class Product {
 
     //GET PRODUCT BY ID
 
-    public static Product getProductById(Connection conn, int productId){
+    public static Product getProductById(Connection conn, int productId) {
         String sql = "SELECT * FROM product WHERE product_id = ?";
-        try(PreparedStatement statement = conn.prepareStatement(sql)) {
-                statement.setInt(1,productId);
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setInt(1, productId);
 
-                try (ResultSet resultSet = statement.executeQuery()){
+            try (ResultSet resultSet = statement.executeQuery()) {
 
-                    if (resultSet.next()){
-                        Product product = new Product();
-                        product.setProductId(resultSet.getInt("product_id"));
-                        product.setProductName(resultSet.getString("product_name"));
-                        product.setDescription(resultSet.getString("description"));
-                        product.setPurchasePrice(resultSet.getFloat("purchase_price"));
-                        product.setSellingPrice(resultSet.getFloat("selling_price"));
-                        product.setQuantity(resultSet.getInt("quantity"));
-                        return product;
-                    }
+                if (resultSet.next()) {
+                    Product product = new Product();
+                    product.setProductId(resultSet.getInt("product_id"));
+                    product.setProductName(resultSet.getString("product_name"));
+                    product.setDescription(resultSet.getString("description"));
+                    product.setPurchasePrice(resultSet.getFloat("purchase_price"));
+                    product.setSellingPrice(resultSet.getFloat("selling_price"));
+                    product.setQuantity(resultSet.getInt("quantity"));
+                    return product;
                 }
+            }
 
-        }catch (SQLException e){
+        } catch (SQLException e) {
 
             System.out.println(e.getMessage());
         }
@@ -178,6 +177,39 @@ public class Product {
     }
 
 
+    public void updateQuantity(int change) {
+        // Assuming change can be positive or negative to represent an increase or decrease in quantity
+        this.quantity += change;
+
+        // Ensure quantity is non-negative (optional, depending on your business logic)
+        if (this.quantity < 0) {
+            this.quantity = 0;
+        }
+
+        // Update the quantity in the database
+        updateQuantityInDatabase();
+    }
+
+    private void updateQuantityInDatabase() {
+        String updateQuantitySQL = "UPDATE product SET quantity = ? WHERE product_id = ?";
+
+        try (Connection conn = DBConnect.connect()) {
+            assert conn != null;
+            try (PreparedStatement statement = conn.prepareStatement(updateQuantitySQL)) {
+                statement.setInt(1, this.quantity);
+                statement.setInt(2, this.productId);
+
+                int rowsUpdated = statement.executeUpdate();
+                if (rowsUpdated > 0) {
+                    System.out.println("Quantity updated in the database.");
+                } else {
+                    System.out.println("Failed to update quantity in the database.");
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
 }
 
 

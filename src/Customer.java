@@ -144,7 +144,6 @@ public class Customer {
     }
 
     //SEARCH AND VIEW CUSTOMER BY TAG METHOD
-
     public static List<Customer> searchAndShowCustomer(Connection conn, String searchTag) throws SQLException {
         List<Customer> customers = new ArrayList<>();
         String searchSql = "SELECT * FROM customer WHERE customer_name = ? OR customer_id = ?";
