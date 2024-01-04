@@ -526,14 +526,14 @@ public class ConsoleInterface {
 
     public void generateInvoice() {
         Scanner scn = new Scanner(System.in);
-        System.out.println("Enter Customer Name : ");
+        System.out.print("Enter Customer Name : ");
         String customerName = scn.nextLine();
 
         System.out.println("-Product Selection Section-");
         List<InvoiceItem> items = new ArrayList<>();
 
         while (true) {
-            System.out.println("Enter Product id or name :");
+            System.out.print("Enter Product id or name : ");
             String productIDorName = scn.nextLine();
             List<Product> currentProduct = Product.searchAndShowProduct(conn, productIDorName); //Always populate with one product each time.
 
@@ -542,40 +542,21 @@ public class ConsoleInterface {
                 continue;
             }
 
-            System.out.println("Enter Quantity :");
+            System.out.print("Enter Quantity : ");
             int qty = scn.nextInt();
 
             // Check if the requested quantity is available in stock
             if (qty > currentProduct.get(0).getQuantity()) {
-//                System.out.println(currentProduct.get(0).getQuantity());
                 System.out.println("Not enough stock available. Please enter a lower quantity.");
                 continue;
             }
 
-            double unitPrice = 0.0; // Default value, handle errors accordingly
-
-            try {
-                String selectPriceSQL = "SELECT selling_price FROM currentProduct WHERE product_id = ?";
-                try (PreparedStatement statement = conn.prepareStatement(selectPriceSQL)) {
-                    statement.setInt(1, currentProduct.get(0).getProductId());
-
-                    try (ResultSet resultSet = statement.executeQuery()) {
-                        if (resultSet.next()) {
-                            unitPrice = resultSet.getDouble("selling_price");
-                        } else {
-                            System.out.println("Error retrieving unit price from the database.");
-                            // You can throw an exception or handle the error in an appropriate way
-                        }
-                    }
-                }
-            } catch (SQLException e) {
-                System.out.println(e.getMessage());
-                // You can throw an exception or handle the error in an appropriate way
-            }
+            double unitPrice = currentProduct.get(0).getSellingPrice();
+            
 
             System.out.println("Unit Price: " + unitPrice);
 
-            System.out.println("Enter Discount :");
+            System.out.print("Enter Discount :");
             double discount = scn.nextDouble();
 
             // Create an InvoiceItem and add it to the list
