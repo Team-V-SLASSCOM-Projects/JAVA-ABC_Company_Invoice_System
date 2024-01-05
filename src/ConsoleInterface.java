@@ -535,35 +535,84 @@ public class ConsoleInterface {
         while (true) {
             System.out.print("Enter Product id or name : ");
             String productIDorName = scn.nextLine();
-            List<Product> currentProduct = Product.searchAndShowProduct(conn, productIDorName); //Always populate with one product each time.
+            List<Product> currentProduct = Product.searchAndShowProduct(conn, productIDorName);
 
             if (currentProduct.isEmpty()) {
                 System.out.println("Product not found. Please try again.");
                 continue;
+            } else if (currentProduct.size() > 1) {
+                // Display available products
+                System.out.println("Multiple products found:");
+                int productIndex = 1;
+                for (Product product : currentProduct) {
+                    System.out.println(productIndex + ". " + product.getProductName() + " (Quantity: " + product.getQuantity() + ")");
+                    productIndex++;
+                }
+
+                // Allow multiple product selection
+                List<Product> selectedProducts = new ArrayList<>();
+                while (true) {
+                    System.out.print("Enter the number of the product you want to add (or 0 to finish): ");
+                    int selectedProductIndex = scn.nextInt();
+                    if (selectedProductIndex == 0) {
+                        break; // User finished selecting products
+                    } else if (selectedProductIndex < 1 || selectedProductIndex > currentProduct.size()) {
+                        System.out.println("Invalid product selection.");
+                        continue;
+                    }
+                    Product selectedProduct = currentProduct.get(selectedProductIndex - 1);
+                    selectedProducts.add(selectedProduct);
+                }
+
+                // Process each selected product
+                for (Product product : selectedProducts) {
+                    // ... (existing code to handle quantity, unit price, discount, invoice item creation)
+
+                    System.out.print("Enter Quantity for "+product.getProductName()+": ");
+                    int qty = scn.nextInt();
+
+                    if (qty > product.getQuantity()) {
+                        System.out.println("Not enough stock available. Please enter a lower quantity.");
+                        continue;
+                    }
+
+                    double unitPrice = product.getSellingPrice();
+
+                    System.out.println("Unit Price: " + unitPrice);
+
+                    System.out.print("Enter Discount :");
+                    double discount = scn.nextDouble();
+
+                    // Create an InvoiceItem and add it to the list
+                    items.add(new InvoiceItem(product, qty, unitPrice, discount)); //Add multiple rows
+                }
+
+            } else {
+                // Only one product found, proceed as usual
+                Product selectedProduct = currentProduct.get(0);
+
+                System.out.print("Enter Quantity : ");
+                int qty = scn.nextInt();
+
+                // Check if the requested quantity is available in stock
+                if (qty > selectedProduct.getQuantity()) {
+                    System.out.println("Not enough stock available. Please enter a lower quantity.");
+                    continue;
+                }
+
+                double unitPrice = selectedProduct.getSellingPrice();
+
+                System.out.println("Unit Price: " + unitPrice);
+
+                System.out.print("Enter Discount :");
+                double discount = scn.nextDouble();
+
+                // Create an InvoiceItem and add it to the list
+                items.add(new InvoiceItem(currentProduct.get(0), qty, unitPrice, discount)); //Add only one row
             }
-
-            System.out.print("Enter Quantity : ");
-            int qty = scn.nextInt();
-
-            // Check if the requested quantity is available in stock
-            if (qty > currentProduct.get(0).getQuantity()) {
-                System.out.println("Not enough stock available. Please enter a lower quantity.");
-                continue;
-            }
-
-            double unitPrice = currentProduct.get(0).getSellingPrice();
-            
-
-            System.out.println("Unit Price: " + unitPrice);
-
-            System.out.print("Enter Discount :");
-            double discount = scn.nextDouble();
-
-            // Create an InvoiceItem and add it to the list
-            items.add(new InvoiceItem(currentProduct.get(0), qty, unitPrice, discount));
 
             System.out.println("Would you like to add another currentProduct to the invoice? yes(y) or no(n)");
-            scn.nextLine(); // Consume the newline character left by nextBigDecimal()
+            scn.nextLine();
             String userChoiceAddProductContinue = scn.nextLine();
 
             if (userChoiceAddProductContinue.equalsIgnoreCase("n")) {
@@ -577,7 +626,6 @@ public class ConsoleInterface {
             invoice.addItem(item.getProduct(), item.getUnits(), item.getUnitPrice(), item.getDiscount());
         }
 
-        // Perform other actions like calculating total price, applying discounts, etc.
         invoice.generateInvoice();
 
     }
