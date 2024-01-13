@@ -6,21 +6,41 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Customer {
-    private String id;
-    private String customerName;
+    private int id;
+    private String name;
     private String email;
     private String address;
-    private String contactNumber;
+    private int contactNumber;
     private String dateOfBirth;
-
     private String gender;
 
-    public String getId() {
+    //connection Object
+    Connection conn = DBConnect.connect();
+
+    //constructor
+    public Customer() {
+
+    }
+
+    public Customer(int id) {
+        this.id = id;
+    }
+
+    public Customer(String name, String email, String address, int contactNumber, String dateOfBirth, String gender) {
+        this.name = name;
+        this.email = email;
+        this.address = address;
+        this.contactNumber = contactNumber;
+        this.dateOfBirth = dateOfBirth;
+        this.gender = gender;
+    }
+
+    public int getId() {
         return id;
     }
 
-    public String getCustomerName() {
-        return customerName;
+    public String getName() {
+        return name;
     }
 
     public String getEmail() {
@@ -31,7 +51,7 @@ public class Customer {
         return address;
     }
 
-    public String getContactNumber() {
+    public int getContactNumber() {
         return contactNumber;
     }
 
@@ -43,12 +63,12 @@ public class Customer {
         return gender;
     }
 
-    public void setId(String id) {
+    public void setId(int id) {
         this.id = id;
     }
 
-    public void setCustomerName(String customerName) {
-        this.customerName = customerName;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public void setEmail(String email) {
@@ -59,7 +79,7 @@ public class Customer {
         this.address = address;
     }
 
-    public void setContactNumber(String contactNumber) {
+    public void setContactNumber(int contactNumber) {
         this.contactNumber = contactNumber;
     }
 
@@ -73,40 +93,65 @@ public class Customer {
 
     //ADD NEW CUSTOMER
 
-    public boolean addNewCustomer(Customer customer, Connection conn) {
+    public boolean addNewCustomer() {
 
-        String insertSQL = "INSERT INTO customer (customer_name, email, address, contact_no, dob, gender) VALUES (?, ?, ?, ?, ?, ?)";
-
-        try (PreparedStatement statement = conn.prepareStatement(insertSQL)) {
-            statement.setString(1, customer.getCustomerName());
-            statement.setString(2, customer.getEmail());
-            statement.setString(3, customer.getAddress());
-            statement.setString(4, customer.getContactNumber());
-            statement.setString(5, customer.getDateOfBirth());
-            statement.setString(6, customer.getGender());
-
-            int rowsInserted = statement.executeUpdate();
-            return rowsInserted > 0;
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            return false;
+        try {
+            PreparedStatement pst = conn.prepareStatement("INSERT INTO customer (name, email, address, contact_no, dob, gender) VALUES (?, ?, ?, ?, ?, ?)");
+            pst.setString(1,this.name);
+            pst.setString(2,this.email);
+            pst.setString(3,this.address);
+            pst.setInt(4,this.contactNumber);
+            pst.setString(5,this.dateOfBirth);
+            pst.setString(6,this.gender);
+            pst.executeUpdate();
+            System.out.println("Customer saved to database");
+            return  true;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    public static Customer getCustomerById(Connection conn, int custoemrId){
+    public boolean isCustomerSaved(int id) {
+        try {
+            PreparedStatement pst = conn.prepareStatement("SELECT * FROM customer WHERE id = ?");
+            pst.setInt(1,id);
+            ResultSet rst = pst.executeQuery();
+            if(rst.next()) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public Customer getCustomerById(int customerId){
         String sql = "SELECT * FROM customer WHERE customer_id = ?";
+
+        try {
+            PreparedStatement pst = conn.prepareStatement("SELECT * FROM customer WHERE id = ?");
+            ResultSet rst = pst.executeQuery();
+            if(rst.next()) {
+                int id = rst.getInt(1);
+                String name = rst.getString(2);
+
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
         try(PreparedStatement statement = conn.prepareStatement(sql)) {
-            statement.setInt(1,custoemrId);
+            statement.setInt(1,customerId);
 
             try (ResultSet resultSet = statement.executeQuery()){
 
                 if (resultSet.next()){
                     Customer customer = new Customer();
-                    customer.setId(String.valueOf(resultSet.getInt("customer_id")));
-                    customer.setCustomerName(resultSet.getString("customer_name"));
+                    customer.id = resultSet.getInt("");
+                    customer.setName(resultSet.getString("customer_name"));
                     customer.setEmail(resultSet.getString("email"));
                     customer.setAddress(resultSet.getString("address"));
-                    customer.setContactNumber(resultSet.getString("contact_no"));
+                    customer.setContactNumber(resultSet.getInt("contact_no"));
                     customer.setGender(resultSet.getString("gender"));
                     return customer;
                 }
@@ -122,19 +167,18 @@ public class Customer {
     }
 
     //UPDATE CUSTOMER BY ID
-    public boolean updateCustomerById(Customer customer, Connection conn, String id) {
+    public boolean updateCustomerById() {
 
         String updateSQL = "UPDATE customer SET customer_name = ?, email = ?, address = ?, contact_no = ?, dob = ?, gender = ? WHERE customer_id = ?";
 
         try (PreparedStatement statement = conn.prepareStatement(updateSQL)) {
-            statement.setString(1, customer.getCustomerName());
-            statement.setString(2, customer.getEmail());
-            statement.setString(3, customer.getAddress());
-            statement.setString(4, customer.getContactNumber());
-            statement.setString(5, customer.getDateOfBirth());
-            statement.setString(6, customer.getGender());
-            statement.setString(7, id); // Assuming the customer_id is a string; adjust accordingly if it's another data type
-
+            statement.setString(1, this.name);
+            statement.setString(2, this.email);
+            statement.setString(3, this.address);
+            statement.setInt(4, this.contactNumber);
+            statement.setString(5, this.dateOfBirth);
+            statement.setString(6, this.gender);
+            statement.setInt(7, this.id);
             int rowsUpdated = statement.executeUpdate();
             return rowsUpdated > 0;
         } catch (Exception e) {
@@ -146,7 +190,7 @@ public class Customer {
     //SEARCH AND VIEW CUSTOMER BY TAG METHOD
     public static List<Customer> searchAndShowCustomer(Connection conn, String searchTag) throws SQLException {
         List<Customer> customers = new ArrayList<>();
-        String searchSql = "SELECT * FROM customer WHERE customer_name = ? OR customer_id = ?";
+        String searchSql = "SELECT * FROM customer WHERE name = ? OR id = ?";
 
         try (PreparedStatement statement = conn.prepareStatement(searchSql)) {
 
@@ -156,15 +200,12 @@ public class Customer {
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
                     Customer customer = new Customer();
-                    customer.setId(String.valueOf(Integer.parseInt(resultSet.getString("customer_id"))));
-                    customer.setCustomerName(resultSet.getString("customer_name"));
-                    customer.setEmail(resultSet.getString("email"));
-                    customer.setAddress(resultSet.getString("address"));
-
-                    customer.setContactNumber(resultSet.getString("contact_no"));
-
+                    customer.id = (resultSet.getInt("customer_id"));
+                    customer.name = (resultSet.getString("customer_name"));
+                    customer.email = (resultSet.getString("email"));
+                    customer.address = (resultSet.getString("address"));
+                    customer.contactNumber = (resultSet.getInt("contact_no"));
                     customer.setDateOfBirth(resultSet.getString("dob"));
-
                     customer.setGender(resultSet.getString("gender"));
                     customers.add(customer);
                 }
@@ -172,11 +213,11 @@ public class Customer {
                 System.out.println(e.getMessage());
             }
 
-            } catch (SQLException e) {
-                System.out.println(e.getMessage());
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
 
 
-            }
+        }
 
 
         return customers;
@@ -187,12 +228,12 @@ public class Customer {
 
     //DELETE CUSTOMER
 
-    public static boolean  deleteCustomer( Connection conn, String id) throws SQLException {
+    public boolean deleteCustomer() {
 
         try{
             String deleteSql = "DELETE FROM customer WHERE customer_id = ?";
             PreparedStatement statement = conn.prepareStatement(deleteSql);
-            statement.setString(1,id);
+            statement.setInt(1,this.id);
 
             int rowsUpdated = statement.executeUpdate();
 
@@ -202,47 +243,6 @@ public class Customer {
         }catch (SQLException e){
             System.out.println(e.getMessage());
             return false;
-
         }
-
-
-
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
-
-
-
-
-

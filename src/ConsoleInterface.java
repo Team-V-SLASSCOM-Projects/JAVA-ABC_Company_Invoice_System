@@ -322,7 +322,7 @@ public class ConsoleInterface {
             String address = scanner.nextLine();
 
             System.out.print("Enter Customer Contact Number: ");
-            String contactNumber = scanner.next();
+            int contactNumber = scanner.nextInt();
 
             System.out.print("Enter Customer Contact DOB: ");
             String dob = scanner.next();
@@ -330,15 +330,9 @@ public class ConsoleInterface {
             System.out.print("Enter Customer Gender: ");
             String gender = scanner.next();
 
-            Customer customer = new Customer();
-            customer.setCustomerName(name);
-            customer.setEmail(email);
-            customer.setAddress(address);
-            customer.setContactNumber(contactNumber);
-            customer.setDateOfBirth(dob);
-            customer.setGender(gender);
+            Customer customer = new Customer(name,email,address,contactNumber,dob,gender);
 
-            boolean result = customer.addNewCustomer(customer, conn);
+            boolean result = customer.addNewCustomer();
             if (result) {
                 System.out.println("Product Added Successfully");
             } else {
@@ -379,7 +373,7 @@ public class ConsoleInterface {
                 for (Customer customer : foundCustomers) {
                     System.out.printf("%-10s%-20s%-30s%-20s%-20s%-10s\n",
                             customer.getId(),
-                            customer.getCustomerName(),
+                            customer.getName(),
                             customer.getEmail(),
                             customer.getAddress(),
                             customer.getContactNumber(),
@@ -412,115 +406,91 @@ public class ConsoleInterface {
         int customerId = scanner.nextInt();
 
         // Check if the product with the given ID exists
-        Customer existingCustomer = Customer.getCustomerById(conn, customerId);
+        Customer customer = new Customer();
+        if(customer.isCustomerSaved(customerId)) {
+            customer = customer.getCustomerById(customerId);
 
-
-        String id = null;
-        if (existingCustomer != null) {
-            id = existingCustomer.getId();
             System.out.println("Existing Product Information:");
             System.out.printf("%-10s%-20s%-30s%-20s%-20s%-10s\n",
                     "ID", "Name", "Email", "Address", "Contact No", "DOB", "Gender");
             System.out.printf("%-10s%-20s%-30s%-20s%-20s%-10s\n",
-                    existingCustomer.getId(),
-                    existingCustomer.getCustomerName(),
-                    existingCustomer.getEmail(),
-                    existingCustomer.getAddress(),
-                    existingCustomer.getContactNumber(),
-                    existingCustomer.getDateOfBirth(),
-                    existingCustomer.getGender());
+                    customer.getId(),
+                    customer.getName(),
+                    customer.getEmail(),
+                    customer.getAddress(),
+                    customer.getContactNumber(),
+                    customer.getDateOfBirth(),
+                    customer.getGender());
 
             // Get updated information from the user
             System.out.println("Enter new information for the product:");
 
             System.out.print("Enter Customer Name: ");
-            scanner.nextLine();
-            String name = scanner.nextLine();
-
+            String name = scanner.next();
             System.out.print("Enter Email Address: ");
             String email = scanner.next();
-
             System.out.print("Enter Customer Address: ");
-            scanner.nextLine();
-            String address = scanner.nextLine();
-
-            System.out.print("Enter Customer Conatct No: ");
-            String contactNo = scanner.next();
-
-            System.out.print("Enter Cutomer DOB: ");
+            String address = scanner.next();
+            System.out.print("Enter Customer Contact No: ");
+            int contactNo = scanner.nextInt();
+            System.out.print("Enter Customer DOB: ");
             String dob = scanner.next();
-
-
-            System.out.print("Enter Cutomer Gender: ");
+            System.out.print("Enter Customer Gender: ");
             String gender = scanner.next();
 
-            // Update the product object
-            existingCustomer.setCustomerName(name);
-            existingCustomer.setEmail(email);
-            existingCustomer.setAddress(address);
-            existingCustomer.setContactNumber(contactNo);
-            existingCustomer.setDateOfBirth(dob);
-            existingCustomer.setGender(gender);
+            //updating Object
+            customer.setName(name);
+            customer.setEmail(email);
+            customer.setAddress(address);
+            customer.setContactNumber(contactNo);
+            customer.setDateOfBirth(dob);
+            customer.setGender(gender);
 
-            // Update the product in the database
-            boolean result = existingCustomer.updateCustomerById(existingCustomer, conn, id);
-
-            if (result) {
+            //updating data base
+            if(customer.updateCustomerById()) {
                 System.out.println("Customer Updated Successfully");
             } else {
                 System.out.println("Something went wrong while updating the product.");
             }
-
         } else {
-            System.out.println("Customer with ID " + id + " not found.");
+            System.out.println("Customer with ID " + customerId + " not found.");
         }
     }
 
 
     public void deleteCustomer() throws SQLException {
-        boolean result = false;
         System.out.println("Delete Customer:");
         System.out.print("Enter the ID of the customer you want to delete: ");
         int customerID = scanner.nextInt();
 
-        Customer existingCustomer = Customer.getCustomerById(conn, customerID);
-
-
-        String id = null;
-        if (existingCustomer != null) {
-            id = existingCustomer.getId();
+        Customer customer = new Customer();
+        //is customer saved?
+        if (customer.isCustomerSaved(customerID)) {
             System.out.println("Existing Customer Information:");
             System.out.printf("%-10s%-20s%-30s%-20s%-20s%-10s\n",
                     "ID", "Name", "Email", "Address", "Contact No", "DOB", "Gender");
             System.out.printf("%-10s%-20s%-30s%-20s%-20s%-10s\n",
-                    existingCustomer.getId(),
-                    existingCustomer.getCustomerName(),
-                    existingCustomer.getEmail(),
-                    existingCustomer.getAddress(),
-                    existingCustomer.getContactNumber(),
-                    existingCustomer.getDateOfBirth(),
-                    existingCustomer.getGender());
+                    customer.getId(),
+                    customer.getName(),
+                    customer.getEmail(),
+                    customer.getAddress(),
+                    customer.getContactNumber(),
+                    customer.getDateOfBirth(),
+                    customer.getGender());
 
-            // Get updated information from the user
             System.out.println("Are you sure Yes(y)/No(n):");
-            scanner.nextLine();
-
             String option = scanner.nextLine();
             if (option.equalsIgnoreCase("y")) {
-                result = Customer.deleteCustomer(conn, id);
+                if (customer.deleteCustomer()) {
+                    System.out.println("Product Deleted Successfully");
+                } else {
+                    System.out.println("Something went wrong while deleting the product.");
+                }
             } else {
                 return;
             }
-
-
-            if (result) {
-                System.out.println("Product Deleted Successfully");
-            } else {
-                System.out.println("Something went wrong while deleting the product.");
-            }
-
         } else {
-            System.out.println("Product with ID " + id + " not found.");
+            System.out.println("Product with ID " + customerID + " not found.");
         }
     }
 
